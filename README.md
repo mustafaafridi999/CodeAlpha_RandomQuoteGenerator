@@ -1,2 +1,376 @@
 # CodeAlpha_RandomQuoteGenerator
 Random Quote Generator built using HTML, CSS and JavaScript.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Quote Generator</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #eaf1ff;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .quote-card {
+            background: white;
+            padding: 30px 20px;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px #00000020;
+            text-align: center;
+        }
+
+        h1 {
+            color: #2859a5;
+            font-size: 30px;
+        }
+
+        #quote {
+            font-size: 23px;
+            line-height: 1.6;
+            color: #222;
+        }
+
+        #author {
+            color: #666;
+            font-size: 17px;
+            font-style: italic;
+        }
+
+        .buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        button {
+            background: #2859a5;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 15px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #19447f;
+        }
+
+        .delete-btn {
+            background: #c0392b;
+            margin-top: 5px;
+        }
+
+        #message {
+            color: #238444;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        #favoritesList {
+            margin-top: 25px;
+            text-align: left;
+        }
+
+        .favorite-item {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            overflow-wrap: anywhere;
+        }
+
+        .favorite-item p {
+            line-height: 1.5;
+        }
+
+        @media (max-width: 400px) {
+            body {
+                padding: 10px;
+            }
+
+            .quote-card {
+                padding: 25px 12px;
+            }
+
+            #quote {
+                font-size: 20px;
+            }
+
+            button {
+                padding: 11px 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <div class="quote-card">
+
+        <h1>Daily Motivation</h1>
+
+        <p id="quote">
+            Believe in yourself and never give up!
+        </p>
+
+        <p id="author">— Mustafa</p>
+
+        <div class="buttons">
+            <button onclick="newQuote()">New Quote</button>
+            <button onclick="copyQuote()">Copy Quote</button>
+            <button onclick="previousQuote()">Previous Quote</button>
+            <button onclick="favoriteQuote()">❤️ Save Favorite</button>
+            <button onclick="viewFavorites()">⭐ View Favorites</button>
+        </div>
+
+        <p id="message"></p>
+
+        <div id="favoritesList"></div>
+
+    </div>
+</div>
+
+<script>
+    const quotes = [
+        {
+            text: "Believe in yourself and never give up!",
+            author: "Mustafa"
+        },
+        {
+            text: "Success comes to those who work hard.",
+            author: "Mustafa"
+        },
+        {
+            text: "Dream big and dare to fail.",
+            author: "Norman Vaughan"
+        },
+        {
+            text: "Every day is a new beginning.",
+            author: "Mustafa"
+        },
+        {
+            text: "Never stop learning and growing.",
+            author: "Mustafa"
+        },
+        {
+            text: "Small steps lead to big achievements.",
+            author: "Mustafa"
+        },
+        {
+            text: "Your future depends on what you do today.",
+            author: "Unknown"
+        }
+    ];
+
+    let currentIndex = 0;
+    let history = [0];
+
+    function showQuote() {
+        document.getElementById("quote").textContent =
+            quotes[currentIndex].text;
+
+        document.getElementById("author").textContent =
+            "— " + quotes[currentIndex].author;
+
+        document.getElementById("message").textContent = "";
+    }
+
+    function newQuote() {
+        let randomIndex = currentIndex;
+
+        if (quotes.length > 1) {
+            while (randomIndex === currentIndex) {
+                randomIndex = Math.floor(
+                    Math.random() * quotes.length
+                );
+            }
+        }
+
+        currentIndex = randomIndex;
+        history.push(currentIndex);
+        showQuote();
+    }
+
+    function previousQuote() {
+        if (history.length > 1) {
+            history.pop();
+
+            currentIndex = history[history.length - 1];
+
+            showQuote();
+        } else {
+            document.getElementById("message").textContent =
+                "No previous quote available!";
+        }
+    }
+
+    async function copyQuote() {
+        const fullQuote =
+            quotes[currentIndex].text +
+            "\n— " +
+            quotes[currentIndex].author;
+
+        try {
+            await navigator.clipboard.writeText(fullQuote);
+
+            document.getElementById("message").textContent =
+                "Quote copied successfully!";
+        } catch (error) {
+            const textArea = document.createElement("textarea");
+
+            textArea.value = fullQuote;
+            document.body.appendChild(textArea);
+            textArea.select();
+
+            const copied = document.execCommand("copy");
+            textArea.remove();
+
+            document.getElementById("message").textContent =
+                copied
+                    ? "Quote copied successfully!"
+                    : "Copy failed. Please try again.";
+        }
+    }
+
+    function getFavorites() {
+        return JSON.parse(
+            localStorage.getItem("favorites") || "[]"
+        );
+    }
+
+    function favoriteQuote() {
+        const quote = quotes[currentIndex];
+        const favorites = getFavorites();
+
+        const alreadySaved = favorites.some(
+            item => item.text === quote.text
+        );
+
+        if (alreadySaved) {
+            document.getElementById("message").textContent =
+                "This quote is already in Favorites!";
+            return;
+        }
+
+        favorites.push(quote);
+
+        localStorage.setItem(
+            "favorites",
+            JSON.stringify(favorites)
+        );
+
+        document.getElementById("message").textContent =
+            "❤️ Favorite saved successfully!";
+    }
+
+    function viewFavorites() {
+        const favorites = getFavorites();
+
+        const list =
+            document.getElementById("favoritesList");
+
+        list.innerHTML = "";
+
+        const heading = document.createElement("h2");
+        heading.textContent = "⭐ My Favorite Quotes";
+        list.appendChild(heading);
+
+        if (favorites.length === 0) {
+            list.textContent = "No favorite quotes saved yet.";
+            return;
+        }
+
+        favorites.forEach(function(item, index) {
+            const card = document.createElement("div");
+            card.className = "favorite-item";
+
+            const quoteText = document.createElement("p");
+
+            quoteText.textContent =
+                "“" + item.text + "” — " + item.author;
+
+            const removeButton =
+                document.createElement("button");
+
+            removeButton.textContent = "🗑️ Remove";
+            removeButton.className = "delete-btn";
+
+            removeButton.onclick = function() {
+                removeFavorite(index);
+            };
+
+            card.appendChild(quoteText);
+            card.appendChild(removeButton);
+            list.appendChild(card);
+        });
+
+        const removeAllButton =
+            document.createElement("button");
+
+        removeAllButton.textContent =
+            "Remove All Favorites";
+
+        removeAllButton.className = "delete-btn";
+
+        removeAllButton.onclick = removeAllFavorites;
+
+        list.appendChild(removeAllButton);
+    }
+
+    function removeFavorite(index) {
+        const favorites = getFavorites();
+
+        favorites.splice(index, 1);
+
+        localStorage.setItem(
+            "favorites",
+            JSON.stringify(favorites)
+        );
+
+        viewFavorites();
+
+        document.getElementById("message").textContent =
+            "Favorite removed successfully!";
+    }
+
+    function removeAllFavorites() {
+        const answer = confirm(
+            "Are you sure you want to remove all favorites?"
+        );
+
+        if (!answer) {
+            return;
+        }
+
+        localStorage.setItem("favorites", "[]");
+
+        viewFavorites();
+
+        document.getElementById("message").textContent =
+            "All favorites removed!";
+    }
+
+    showQuote();
+</script>
+
+</body>
+</html>
